@@ -1,0 +1,150 @@
+:root{
+    --blue: #4A77C6;
+    --light-blue: #EAE7FA;
+    --green: green;
+    --red: red;
+    --pink: #ea4c89;
+    --gray: #9998A7;
+}
+* {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+}
+
+.left-sidebar {
+    background-color: var(--light-blue);
+    min-height: 100vh;
+    max-height: 100%;
+}
+
+.left-sidebar div{
+    margin-top: 20px;
+    position: fixed;
+}
+
+.left-sidebar div:first-child{
+    margin-bottom: 50px;
+}
+
+.left-sidebar div:last-child{
+    margin-top: 30px;
+}
+
+.left-sidebar ul{
+    list-style-type: none;
+    padding: 0;
+}
+
+.left-sidebar ul li{
+    line-height: 40px;
+    letter-spacing: 1px;
+}
+
+.left-sidebar ul li:hover{
+    color: var(--blue);
+    cursor: pointer;
+    font-weight: bolder;
+
+}
+
+.content-div > div{
+    margin: 40px 30px 30px 30px;
+}
+
+.content-div > div:nth-child(2) > div > div{
+    padding: 20px 20px;
+}
+
+.content-div > div:nth-child(2) > div > div h4{
+    font-weight: bolder;
+    font-size: x-large;
+    letter-spacing: 2px;
+}
+
+.content-div > div:nth-child(2) > div > div p{
+    font-weight: 700;
+    color: var(--gray);
+    letter-spacing: 1px;
+}
+
+.content-div > div:nth-child(2) > div > div:nth-child(1) h4{
+    color: var(--green);
+}
+
+.content-div > div:nth-child(2) > div > div:nth-child(2) h4{
+    color: var(--pink);
+}
+#formSearch .form-control{
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.content-div > div:nth-child(2){
+    border-radius: 5px;
+    box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+}
+
+#btnShowCreateModal, #btnDropdown{
+    border: 2px solid var(--blue);
+    border-radius: 10px;
+    color: var(--blue);
+    font-weight: bolder;
+}
+
+#btnShowCreateModal:hover{
+    background-color: var(--blue);
+    color: white;
+}
+
+table{
+    width: 100%;
+    border: 1px;
+}
+
+/* create modal */
+#btnCreate, #btnUpdate{
+    border:1px solid var(--blue);
+    color: var(--blue);
+}
+
+#btnCreate:hover,#btnUpdate:hover {
+    background-color: var(--blue);
+    color: white;
+}
+
+i:hover{
+    color: var(--blue);
+}
+
+.modal-alert-danger {
+    padding: 10px 35px;
+    margin-bottom: 15px;
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+
+.show {
+    display: block !important;
+}
+
+.hide {
+    display: none;
+}
+
+label.error {
+    display: list-item;
+}
+
+input.error {
+    border: solid 1px red;
+}
+
+#logoutLi a{
+    text-decoration: none;
+    color: black;
+}
+
+#logoutLi a:hover{
+    color: var(--blue);
+}

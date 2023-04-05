@@ -1,0 +1,764 @@
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<th:block th:fragment="script">
+    <script src="/assets/sweetalert2/v11.7.3/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
+            integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+            integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script src="/assets/jquery/jquery.validate.min.js"></script>
+    <script src="/assets/js/AppBase.js"></script>
+    <script>
+        let currentId;
+        let productDTO = new ProductDTO();
+        let page_size = 5;
+        let current_page = 0;
+
+        const page = {
+            urls: {
+                getAllCategories: AppBase.API_CATEGORY,
+                getAllProducts: AppBase.API_PRODUCT,
+                getProduct: AppBase.API_PRODUCT,
+                doCreate: AppBase.API_CREATE_PRODUCT,
+                doUpdate: AppBase.API_UPDATE_PRODUCT,
+                doDelete: AppBase.API_DELETE_PRODUCT,
+                search: AppBase.API_SEARCH
+            },
+            elements: {},
+            loadData: {},
+            commands: {},
+            dialogs: {
+                elements: {},
+                loadData: {},
+                commands: {},
+            }
+        }
+
+        page.elements.btnShowCreateModal = $('#btnShowCreateModal');
+
+        page.elements.btnCreate = $('#btnCreate');
+        page.elements.btnUpdate = $('#btnUpdate');
+
+        page.elements.bthSearch = $('#btnSearch');
+        page.elements.searchInput = $('#searchKey');
+
+        page.dialogs.elements.modalCreate = $('#createModal');
+        page.dialogs.elements.productNameCre = $("#productNameCre");
+        page.dialogs.elements.priceCre = $("#priceCre");
+        page.dialogs.elements.quantityCre = $("#quantityCre");
+        page.dialogs.elements.idCategoryCre = $("#categoryIdCre");
+        page.dialogs.elements.descriptionCre = $("#descriptionCre");
+
+        page.dialogs.elements.modalUpdate = $('#editModal');
+        page.dialogs.elements.productNameUp = $("#productNameUp");
+        page.dialogs.elements.priceUp = $("#priceUp");
+        page.dialogs.elements.quantityUp = $("#quantityUp");
+        page.dialogs.elements.idCategoryUp = $("#categoryIdUp");
+        page.dialogs.elements.descriptionUp = $("#descriptionUp");
+
+
+        page.dialogs.elements.formCreate = $("#formCreateProduct");
+        page.dialogs.elements.formUpdate = $("#formUpdateProduct");
+
+        page.dialogs.elements.wrapper = $("section .wrapper");
+        page.dialogs.elements.productName = $("#productName");
+        page.dialogs.elements.description = $("#description");
+        page.dialogs.elements.imageFile = $("#imageFile");
+        page.dialogs.elements.wrapperContent = $("section .wrapper .content");
+        page.dialogs.elements.imagePreview = $("section .image-preview");
+        page.dialogs.elements.imagePreviewCanvas = $("section .image-preview canvas");
+        page.dialogs.elements.canvas = $("#canvas");
+        page.dialogs.elements.context = page.dialogs.elements.canvas[0].getContext('2d');
+        page.dialogs.elements.imagePreviewCanvas.css("display", "none");
+        // page.dialogs.elements.divImagePreview = $("div.image-preview, div.file-name");
+        page.dialogs.elements.divImagePreview = $("#createModal div.image-preview");
+        page.dialogs.elements.divFileName = $("#createModal div.file-name");
+
+        page.dialogs.elements.imageFileUp = $("#imageFileUp");
+        page.dialogs.elements.imagePreviewCanvasUp = $("section .image-preview #canvasUp");
+        page.dialogs.elements.canvasUp = $("#canvasUp");
+        page.dialogs.elements.contextUp = page.dialogs.elements.canvasUp[0].getContext('2d');
+        page.dialogs.elements.imagePreviewCanvasUp.css("display", "none");
+        // page.dialogs.elements.divImagePreviewUp = $("#editModal div.image-preview, div.file-name");
+        page.dialogs.elements.divImagePreviewUp = $("#editModal div.image-preview");
+        page.dialogs.elements.divFileNameUp = $("#editModal div.file-name");
+        page.dialogs.elements.btnClearImagePreview = $(".clear-image-preview i");
+
+        page.loadData.getAllProducts = (key) => {
+
+            $.ajax({
+                type: 'GET',
+                url: page.urls.search + '?q=' + key + '&page=' + current_page
+            })
+                .done((data) => {
+                    let products = data.content;
+
+                    let pageable = data.pageable;
+                    let totalPage = data.totalPages;
+                    let str = renderPaging(pageable, totalPage);
+                    $("#paginationUl").empty();
+                    $("#paginationUl").append(str);
+                    console.log(str);
+                    // let total = data.pageable.totalElements;
+                    // $("#paginationUl").append(total);
+                    // $(".productTotal h4").empty();
+                    // $(".productTotal h4").append(total);
+                    $.each(products, (i, item) => {
+                        let productAvatar = new ProductAvatar(item.id, item.fileFolder, item.fileName, item.fileUrl);
+                        productDTO = new ProductDTO(item.id, item.productName, item.price, item.quantity, item.description, item.category, productAvatar);
+                        let str = renderProduct(productDTO);
+                        $('#table-list tbody').prepend(str);
+                    })
+                    addAllEvent();
+
+                    page.commands.handleAddEventPageLink();
+
+                })
+                .fail((error) => {
+                    console.log(error);
+                })
+        }
+
+        page.loadData.getAllCategories = () => {
+            $.ajax({
+                type: "GET",
+                url: page.urls.getAllCategories
+            })
+                .done((data) => {
+                    let categoryTotal = data.length;
+                    $(".categoryTotal h4").empty();
+                    $(".categoryTotal h4").append(categoryTotal);
+
+                    page.dialogs.elements.idCategoryCre.empty();
+                    page.dialogs.elements.idCategoryUp.empty();
+                    $.each(data, (i, item) => {
+                        let str = `<option value="${item.id}">${item.categoryName}</option>`
+                        page.dialogs.elements.idCategoryCre.append(str);
+                        page.dialogs.elements.idCategoryUp.append(str);
+                    })
+                })
+                .fail((error) => {
+                    console.log(error);
+                })
+        }
+
+        page.loadData.searchByProductName = (key, direction) => {
+            $.ajax({
+                type: "GET",
+                url: page.urls.search + 'q=' + key + '&page=' + current_page + '&size=' + page_size + "&sort=price," + direction
+            })
+                .done((data) => {
+                    $('#table-list tbody').empty();
+                    $("#paginationUl").empty();
+                    let products = data.content;
+                    if (products.length === 0) {
+                        $('#table-list tbody').prepend("No Results");
+                        return;
+                    }
+                    let pageable = data.pageable;
+                    let totalPage = data.totalPages;
+                    let str = renderPaging(pageable, totalPage);
+                    $("#paginationUl").empty();
+                    $("#paginationUl").append(str);
+
+
+                    $.each(products, (i, item) => {
+                        let td_text = (page_size * current_page) + i + 1;
+                        // alert(td_text);
+                        let productAvatar = new ProductAvatar(item.id, item.fileFolder, item.fileName, item.fileUrl);
+                        productDTO = new ProductDTO(item.id, item.productName, item.price, item.quantity, item.description, item.category, productAvatar);
+                        let str = renderProduct(productDTO);
+                        $('#table-list tbody').append(str);
+                        $('#td_' + productDTO.id).append(td_text);
+                    })
+                    current_page = 0;
+                    addAllEvent();
+                    page.commands.handleAddEventPageLink();
+                })
+                .fail((error) => {
+                    console.log(error);
+                })
+        }
+
+        page.loadData.findProductById = (productId) => {
+            return $.ajax({
+                type: "POST",
+                url: page.urls.getProduct + "/" + productId,
+            })
+                .done((data) => {
+                })
+                .fail((jqXHR) => {
+                    let errors = jqXHR.responseJSON;
+                    if (errors) {
+                        let str = "";
+                        $.each(errors, (k, v) => {
+                            str += `${v}`
+                        })
+                        AppBase.errorAlert(str);
+                    }
+                })
+        }
+
+        //upload ảnh create
+        page.dialogs.commands.loadImageToCanvas = (imageFile, fileType, imageUrl) => {
+            page.dialogs.elements.imagePreviewCanvas.css("display", "");
+            page.dialogs.elements.wrapper.addClass("active");
+            page.dialogs.elements.wrapperContent.css("opacity", 0);
+
+            page.dialogs.elements.imagePreviewCanvasUp.css("display", "");
+            page.dialogs.elements.wrapper.addClass("active");
+            page.dialogs.elements.wrapperContent.css("opacity", 0);
+
+            let imageObj = new Image();
+
+            imageObj.onload = function () {
+                page.dialogs.elements.context.canvas.width = imageObj.width;
+                page.dialogs.elements.context.canvas.height = imageObj.height;
+                page.dialogs.elements.context.drawImage(imageObj, 0, 0, imageObj.width, imageObj.height);
+
+                page.dialogs.elements.contextUp.canvas.width = 445;
+                page.dialogs.elements.contextUp.canvas.height = 345;
+                page.dialogs.elements.contextUp.drawImage(imageObj, 0, 0, 445, 345);
+            };
+
+            if (fileType === "BINARY") {
+                imageObj.src = URL.createObjectURL(imageFile);
+            } else {
+                imageObj.src = imageUrl;
+            }
+        }
+
+        page.dialogs.commands.changeImagePreview = (elem) => {
+            let imageFile = elem[0].files[0];
+
+            if (imageFile) {
+                let reader = new FileReader();
+
+                reader.readAsDataURL(imageFile);
+
+                reader.onload = function (e) {
+                    if (e.target.readyState === FileReader.DONE) {
+                        page.dialogs.commands.loadImageToCanvas(imageFile, "BINARY", null);
+                    }
+                }
+            } else {
+                page.dialogs.elements.clearImagePreview();
+            }
+        }
+
+        page.dialogs.commands.clearImagePreview = () => {
+            page.dialogs.elements.imageFile.val("");
+            page.dialogs.elements.imagePreviewCanvas.css("display", "none");
+            page.dialogs.elements.wrapper.removeClass("active");
+            page.dialogs.elements.wrapperContent.css("opacity", 1);
+        }
+
+        //delete
+        function addEventDeleteClick() {
+            $(".delete").on('click', function () {
+                let productId = $(this).data('id');
+                page.loadData.findProductById(productId).then((data) => {
+                    currentId = data.id;
+                    let productName = data.productName;
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "Do you want to remove product " + " ' " + productName + " ' " + " from list?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                headers: {
+                                    'accept': 'application/json',
+                                    'content-type': 'application/json'
+                                },
+                                type: "POST",
+                                url: page.urls.doDelete + "/" + currentId
+                            })
+                                .done((data) => {
+                                    $("#tr_" + currentId).remove();
+                                    page.loadData.searchByProductName(page.elements.searchInput.val(), "asc");
+                                    removeAllEvent();
+                                    addAllEvent();
+                                })
+                                .fail((error) => {
+                                    AppBase.errorAlert(error);
+                                })
+                            Swal.fire(
+                                'Deleted!',
+                                'This product has been deleted.',
+                                'success'
+                            )
+                        }
+                    })
+                })
+            })
+        }
+
+
+        function addEventEditClick() {
+            $(".edit").on('click', function () {
+                let productId = $(this).data('id');
+                page.loadData.findProductById(productId).then((product) => {
+                    currentId = product.id;
+                    let avatar = product.productAvatar;
+                    page.dialogs.elements.productNameUp.val(product.productName);
+                    page.dialogs.elements.priceUp.val(product.price);
+                    page.dialogs.elements.quantityUp.val(product.quantity);
+                    page.dialogs.elements.descriptionUp.val(product.description);
+
+                    page.loadData.getAllCategories();
+                    page.dialogs.elements.idCategoryUp.val(product.category.categoryName);
+
+                    page.dialogs.commands.loadImageToCanvas(null, "URL", avatar.fileUrl);
+
+
+                    page.dialogs.elements.modalUpdate.modal("show");
+                })
+                    .catch((error) => {
+                        AppBase.errorAlert("Not found this product to update");
+                    });
+            })
+        }
+
+        page.commands.doUpdate = () => {
+            let productName = page.dialogs.elements.productNameUp.val();
+            let price = page.dialogs.elements.priceUp.val();
+            let quantity = page.dialogs.elements.quantityUp.val();
+            let categoryId = page.dialogs.elements.idCategoryUp.val();
+            let categoryName = page.dialogs.elements.idCategoryUp.text();
+            let description = page.dialogs.elements.descriptionUp.val();
+
+            let avatarFile = page.dialogs.elements.imageFileUp[0].files[0];
+            console.log(avatarFile);
+
+            let formData = new FormData();
+            formData.append("productName", productName);
+            formData.append("price", price);
+            formData.append("quantity", quantity);
+            formData.append("description", description);
+            formData.append("categoryId", categoryId);
+            formData.append("categoryName", categoryName);
+            formData.append("file", avatarFile);
+
+
+            $.ajax({
+                type: "PATCH",
+                contentType: false,
+                cache: false,
+                processData: false,
+                url: page.urls.doUpdate + "/" + currentId,
+                data: formData
+            })
+                .done((data) => {
+                    let i = $("#tr_" + currentId + "+ td").text();
+                    alert(i);
+                    let str = renderProduct(data);
+                    $("#tr_" + currentId).replaceWith(str);
+
+                    AppBase.successAlert("Updated");
+
+                    removeAllEvent();
+                    addAllEvent();
+
+                    page.dialogs.elements.modalUpdate.modal("hide");
+                })
+                .fail((jqXHR) => {
+                    let errors = jqXHR.responseJSON;
+                    let str = '';
+                    $.each(errors, (k, v) => {
+                        str += `<li for="${k}Up">${v}</li>`;
+                        $("#" + k + "Up").addClass("error");
+                    })
+                    $('#editModal .modal-alert-danger').append(str);
+                    $('#editModal .modal-alert-danger').removeClass('hide').addClass('show');
+
+                    AppBase.errorAlert("Failed update product. Please try again!");
+                })
+
+        }
+        page.dialogs.elements.formUpdate.validate({
+            rules: {
+                productNameUp: {
+                    required: true,
+                    minlength: 5,
+                    maxlength: 50
+                },
+                priceUp: {
+                    required: true,
+                    number: true,
+                    min: 10000,
+                    max: 10000000
+                },
+                quantityUp: {
+                    required: true,
+                    number: true,
+                    min: 0,
+                    max: 1000
+                },
+                idCategoryUp: {
+                    required: true,
+                }
+            },
+            messages: {
+                productNameUp: {
+                    required: 'Please enter product name',
+                    minlength: 'Min character of product name is ${0}',
+                    maxlength: 'Max character of product name is ${0}'
+                },
+                priceUp: {
+                    required: 'Please enter price',
+                    number: "Price amount must be a number",
+                    minlength: 'The price of product must be more than 10.000 VNĐ',
+                    maxlength: 'The price of product must be less than 10 millions VNĐ'
+                },
+                quantityUp: {
+                    required: "Please enter quantity of product",
+                    number: "Quantity must be a number",
+                    min: "The quantity of product must be more than 0",
+                    max: "The quantity of product must be less than 1000"
+                },
+                idCategoryUp: {
+                    required: "Please select category's id",
+                }
+            },
+            errorLabelContainer: "#editModal .modal-alert-danger",
+            errorPlacement: function (error, element) {
+                error.appendTo("#editModal .modal-alert-danger");
+            },
+            showErrors: function (errorMap, errorList) {
+                if (this.numberOfInvalids() > 0) {
+                    $("#editModal .modal-alert-danger").removeClass("hide").addClass("show");
+                } else {
+                    $("#editModal .modal-alert-danger").removeClass("show").addClass("hide").empty();
+                    $("#formUpdateProduct input.error").removeClass("error");
+                }
+                this.defaultShowErrors();
+            },
+            submitHandler: function () {
+                page.commands.doUpdate();
+            }
+        })
+
+        page.commands.doCreate = () => {
+            let productName = page.dialogs.elements.productNameCre.val();
+            let price = page.dialogs.elements.priceCre.val();
+            let quantity = page.dialogs.elements.quantityCre.val();
+            let description = page.dialogs.elements.descriptionCre.val();
+            let idCategory = $("#categoryIdCre option:selected").val();
+            let avatarFile = page.dialogs.elements.imageFile[0].files[0];
+
+            // console.log(avatarFile);
+            let formData = new FormData();
+
+            if (avatarFile === undefined) {
+                formData.append("productName", productName);
+                formData.append("price", price);
+                formData.append("quantity", quantity);
+                formData.append("description", description);
+                formData.append("categoryId", idCategory);
+            } else {
+                formData.append("productName", productName);
+                formData.append("price", price);
+                formData.append("quantity", quantity);
+                formData.append("description", description);
+                formData.append("categoryId", idCategory);
+                formData.append("avatarFile", avatarFile);
+            }
+
+            $.ajax({
+                type: "POST",
+                contentType: false,
+                cache: false,
+                processData: false,
+                url: page.urls.doCreate,
+                data: formData
+            })
+                .done((data) => {
+                    productDTO = data;
+                    let str = renderProduct(productDTO);
+                    $('#table-list tbody').prepend(str);
+
+                    AppBase.successAlert("Created new product");
+
+                    removeAllEvent();
+
+                    addAllEvent();
+
+                    page.dialogs.elements.modalCreate.modal("hide");
+                    page.dialogs.elements.formCreate[0].reset();
+
+                    page.elements.searchInput.val("");
+
+                    page.loadData.searchByProductName(page.elements.searchInput.val(), "asc");
+                })
+                .fail((jqXHR) => {
+                    if (jqXHR.status === 404) {
+                        AppBase.errorAlert("Not found this category");
+                    } else {
+                        let errors = jqXHR.responseJSON;
+                        let str = '';
+                        $.each(errors, (k, v) => {
+                            str += `<li for="${k}Cre">${v}</li>`;
+                            $("#" + k + "Cre").addClass("error");
+                        })
+                        $('#createModal .modal-alert-danger').append(str);
+                        $('#createModal .modal-alert-danger').removeClass('hide').addClass('show');
+                    }
+                })
+        }
+
+
+        page.dialogs.elements.formCreate.validate({
+            rules: {
+                productNameCre: {
+                    required: true,
+                    minlength: 5,
+                    maxlength: 50
+                },
+                priceCre: {
+                    required: true,
+                    number: true,
+                    min: 10000,
+                    max: 10000000
+                },
+                quantityCre: {
+                    required: true,
+                    number: true,
+                    min: 0,
+                    max: 1000
+                },
+                idCategory: {
+                    required: true,
+                }
+            },
+            messages: {
+                productNameCre: {
+                    required: 'Please enter product name',
+                    minlength: 'Min character of product name is ${0}',
+                    maxlength: 'Max character of product name is ${0}'
+                },
+                priceCre: {
+                    required: 'Please enter email',
+                    number: "Price amount must be a number",
+                    minlength: 'The price of new product must be more than 10.000 VNĐ',
+                    maxlength: 'The price of new product must be less than 10 millions VNĐ'
+                },
+                quantityCre: {
+                    required: "Please enter quantity of new product",
+                    number: "Quantity must be a number",
+                    min: "The quantity of new product must be more than 0",
+                    max: "The quantity of new product must be less than 1000"
+                },
+                idCategory: {
+                    required: "Please select category's id",
+                }
+            },
+            errorLabelContainer: "#createModal .modal-alert-danger",
+            errorPlacement: function (error, element) {
+                error.appendTo("#createModal .modal-alert-danger");
+            },
+            showErrors: function (errorMap, errorList) {
+                if (this.numberOfInvalids() > 0) {
+                    $("#createModal .modal-alert-danger").removeClass("hide").addClass("show");
+                } else {
+                    $("#createModal .modal-alert-danger").removeClass("show").addClass("hide").empty();
+                    $("#formCreateProduct input.error").removeClass("error");
+                }
+                this.defaultShowErrors();
+            },
+            submitHandler: function () {
+                page.commands.doCreate();
+            }
+        })
+
+        $(".modal").on('hidden.bs.modal', () => {
+            $('.modal form').validate().resetForm();
+            page.dialogs.elements.formUpdate[0].reset();
+            page.dialogs.elements.formCreate[0].reset();
+            $(".modal .modal-alert-danger").removeClass("show").addClass("hide");
+            $('.modal .modal-alert-danger').empty().removeClass("show").addClass("hide");
+            $('.modal form').find("input.error").removeClass("error");
+        })
+
+        function addEventPageLink() {
+            $(".page-item").click(() => {
+                alert("paging");
+                current_page = +$(this).data("page");
+                current_page -= 1;
+                page.loadData.getAllProducts();
+            })
+        }
+
+
+        page.commands.handleAddEventPageLink = () => {
+            $('.page-link').on('click', function () {
+
+                let pageNumber = $(this).data('page');
+
+                current_page = pageNumber;
+
+                let key = page.elements.searchInput.val();
+
+
+                page.loadData.searchByProductName(key, "asc");
+            })
+        }
+
+        page.commands.handleAddEventDropDown = () => {
+            $('.dropdown-menu li').on(("click"), function () {
+                alert("222");
+                let direction = $(this).attr("id");
+                let key = page.elements.searchInput.val();
+                alert(direction);
+                page.loadData.searchByProductName(key, direction);
+            });
+        }
+
+
+        function renderPaging(pageable, totalPage) {
+            let str = "";
+            if (current_page === 0) {
+                str = "";
+            } else {
+                str = `
+                        <li class="page-item page-link" data-page="${current_page - 1}">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only">Previous</span>
+                        </li>
+                       `;
+
+            }
+            for (let i = 1; i <= totalPage; i++) {
+                if ((i - 1) === pageable.pageNumber) {
+                    str += `
+                            <li class="page-item page-link active" data-page="${i - 1}">${i}</li>
+                `;
+                } else {
+                    str += `<li class="page-item page-link" data-page="${i - 1}">${i}</li>`;
+                }
+            }
+            if (current_page === totalPage - 1) {
+                str += "";
+            } else {
+                str += `<li class="page-item page-link" data-page="${current_page + 1}">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </li>
+            `;
+            }
+            return str;
+        }
+
+        function renderProduct(productDTO) {
+            let image_thumbnail = `
+                ${AppBase.API_CLOUDINARY}/${AppBase.SCALE_IMAGE_W_80_H_80_Q_100}/${productDTO.productAvatar.fileFolder}/${productDTO.productAvatar.fileName}`;
+            return `<tr id="tr_${productDTO.id}">
+                                        <td id="td_${productDTO.id}"></td>
+                                        <td>
+                                            <img src="${image_thumbnail}" alt="">
+                                        </td>
+                                        <td>${productDTO.productName}</td>
+                                        <td>
+                                        ${new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(productDTO.price)}</td>
+                                        <td>${productDTO.quantity}</td>
+                                        <td>${productDTO.description}</td>
+                                        <td>${productDTO.category.categoryName}</td>
+                                        <td><button type="button" class="btn edit" data-id="${productDTO.id}">
+                                                  <i class="fa-solid fa-pen-to-square"></i></button>
+                                            <button type="button" class="btn delete" data-id="${productDTO.id}">
+                                                 <i class="fa-solid fa-trash"></i></button>
+                                        </td>
+                      </tr>`
+        }
+
+        function addAllEvent() {
+            addEventEditClick();
+            addEventDeleteClick();
+        }
+
+        function removeAllEvent() {
+            $(".edit").off("click");
+            $(".delete").off("click");
+        }
+
+        page.commands.loadData = () => {
+            let key = page.elements.searchInput.val();
+            page.loadData.searchByProductName(key, "asc");
+            page.loadData.getAllCategories();
+        }
+
+        page.initializeControlEvent = () => {
+
+            page.elements.searchInput.on("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    page.elements.bthSearch.click();
+                }
+            });
+
+            page.dialogs.elements.divImagePreview.on('click', () => {
+                page.dialogs.elements.imageFile.trigger('click');
+            })
+
+            page.dialogs.elements.divFileName.on('click', () => {
+                page.dialogs.elements.imageFile.trigger('click');
+            })
+
+            page.dialogs.elements.divImagePreviewUp.on('click', () => {
+                page.dialogs.elements.imageFileUp.trigger('click');
+            })
+
+            page.dialogs.elements.divFileNameUp.on('click', () => {
+                page.dialogs.elements.imageFileUp.trigger('click');
+            })
+
+            page.dialogs.elements.imageFile.on("change", function () {
+                page.dialogs.commands.changeImagePreview(page.dialogs.elements.imageFile);
+            });
+
+            page.dialogs.elements.imageFileUp.on("change", function () {
+                page.dialogs.commands.changeImagePreview(page.dialogs.elements.imageFileUp);
+            });
+
+            page.dialogs.elements.btnClearImagePreview.on('click', () => {
+                page.dialogs.commands.clearImagePreview();
+            })
+
+            page.elements.btnShowCreateModal.on('click', () => {
+                $("#createModal").modal('show');
+            })
+
+            page.elements.btnCreate.on('click', function () {
+                $("#formCreateProduct").trigger("submit");
+            })
+
+            page.elements.btnUpdate.on("click", function () {
+                page.dialogs.elements.formUpdate.trigger("submit");
+
+            })
+
+            page.elements.bthSearch.on("click", function () {
+                let key = page.elements.searchInput.val();
+                page.loadData.searchByProductName(key, "asc");
+                // page.elements.searchInput.val("");
+            })
+
+            addEventPageLink();
+        }
+
+        $(() => {
+            page.commands.loadData();
+            page.initializeControlEvent();
+        })
+    </script>
+</th:block>
