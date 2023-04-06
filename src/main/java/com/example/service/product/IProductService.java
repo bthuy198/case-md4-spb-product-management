@@ -18,8 +18,6 @@ public interface IProductService extends IGeneralService<Product> {
     List<ProductDTO> getAllProductsDTODeletedIsFalse();
     List<ProductResDTO> getAllProductResDTODeletedIsFalse();
 
-//    List<Product> findAllByDeletedIsFalse(Pageable pageable);
-
     Page<ProductResDTO> findAllPagesByDeletedIsFalse(Pageable pageable);
 
     Page<ProductResDTO> findAllPagesByKeySearchAndDeletedIsFalse(String keySearch, Pageable pageable);

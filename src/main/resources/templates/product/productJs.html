@@ -102,10 +102,6 @@
                     $("#paginationUl").empty();
                     $("#paginationUl").append(str);
                     console.log(str);
-                    // let total = data.pageable.totalElements;
-                    // $("#paginationUl").append(total);
-                    // $(".productTotal h4").empty();
-                    // $(".productTotal h4").append(total);
                     $.each(products, (i, item) => {
                         let productAvatar = new ProductAvatar(item.id, item.fileFolder, item.fileName, item.fileUrl);
                         productDTO = new ProductDTO(item.id, item.productName, item.price, item.quantity, item.description, item.category, productAvatar);
@@ -115,6 +111,8 @@
                     addAllEvent();
 
                     page.commands.handleAddEventPageLink();
+                    page.commands.handleSortPriceUp();
+                    page.commands.handleSortPriceDown();
 
                 })
                 .fail((error) => {
@@ -154,10 +152,10 @@
                     $('#table-list tbody').empty();
                     $("#paginationUl").empty();
                     let products = data.content;
-                    if (products.length === 0) {
-                        $('#table-list tbody').prepend("No Results");
-                        return;
-                    }
+                    // if (products.length === 0) {
+                    //     $('#table-list tbody').prepend("No Results");
+                    //     return;
+                    // }
                     let pageable = data.pageable;
                     let totalPage = data.totalPages;
                     let str = renderPaging(pageable, totalPage);
@@ -174,9 +172,10 @@
                         $('#table-list tbody').append(str);
                         $('#td_' + productDTO.id).append(td_text);
                     })
-                    current_page = 0;
                     addAllEvent();
                     page.commands.handleAddEventPageLink();
+                    page.commands.handleSortPriceUp();
+                    page.commands.handleSortPriceDown();
                 })
                 .fail((error) => {
                     console.log(error);
@@ -260,8 +259,10 @@
         function addEventDeleteClick() {
             $(".delete").on('click', function () {
                 let productId = $(this).data('id');
+                
                 page.loadData.findProductById(productId).then((data) => {
                     currentId = data.id;
+                    let end_item = +$('#td_' + currentId).text();
                     let productName = data.productName;
                     Swal.fire({
                         title: 'Are you sure?',
@@ -282,8 +283,15 @@
                                 url: page.urls.doDelete + "/" + currentId
                             })
                                 .done((data) => {
+                                    let key = page.elements.searchInput.val();
                                     $("#tr_" + currentId).remove();
-                                    page.loadData.searchByProductName(page.elements.searchInput.val(), "asc");
+                                    if (end_item % page_size === 1 && end_item !== 1) {
+                                        current_page--;
+                                        page.loadData.searchByProductName(key, "asc");
+                                    } else {
+                                        page.loadData.searchByProductName(key, "asc");
+                                    }
+
                                     removeAllEvent();
                                     addAllEvent();
                                 })
@@ -606,8 +614,33 @@
 
                 let key = page.elements.searchInput.val();
 
-
                 page.loadData.searchByProductName(key, "asc");
+                $(".fa-arrow-down-short-wide").off("click");
+                $(".fa-arrow-up-short-wide").off("click");
+            })
+        }
+
+        page.commands.handleSortPriceUp = () => {
+            $(".fa-arrow-up-short-wide").on("click", function (){
+                let key = page.elements.searchInput.val();
+                page.loadData.searchByProductName(key, "asc");
+                $("#price i").removeClass("fa-arrow-up-short-wide");
+                $("#price i").addClass("fa-arrow-down-short-wide");
+                $("#price").attr("title", "Sort price high to low");
+                $(".fa-arrow-up-short-wide").off("click");
+                $(".fa-arrow-down-short-wide").off("click");
+            })
+        }
+
+        page.commands.handleSortPriceDown = () => {
+            $(".fa-arrow-down-short-wide").on("click", function (){
+                let key = page.elements.searchInput.val();
+                page.loadData.searchByProductName(key, "desc");
+                $("#price i").removeClass("fa-arrow-down-short-wide");
+                $("#price i").addClass("fa-arrow-up-short-wide");
+                $("#price").attr("title", "Sort price low to high");
+                $(".fa-arrow-down-short-wide").off("click");
+                $(".fa-arrow-up-short-wide").off("click");
             })
         }
 

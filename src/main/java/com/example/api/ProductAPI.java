@@ -48,50 +48,10 @@ public class ProductAPI {
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 
-//    @GetMapping("")
-//    public ResponseEntity<?> getAllProducts() {
-//        List<ProductDTO> productDTOS = new ArrayList<>();
-//        List<ProductResDTO> productResDTOS = productService.getAllProductResDTODeletedIsFalse();
-//
-//        for (ProductResDTO item : productResDTOS) {
-//            ProductAvatarDTO productAvatarDTO = new ProductAvatarDTO();
-//            productAvatarDTO.setId(item.getAvatarId());
-//            productAvatarDTO.setFileName(item.getFileName());
-//            productAvatarDTO.setFileFolder(item.getFileFolder());
-//            productAvatarDTO.setCloudId(item.getFileUrl());
-//            ProductDTO productDTO = item.toProductDTO(productAvatarDTO);
-//            productDTOS.add(productDTO);
-//        }
-//        return new ResponseEntity<>(productDTOS, HttpStatus.OK);
-//    }
-
-    @GetMapping("/")
-    public ResponseEntity<?> getAllProductPagingAndSorting(@PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable) {
-//        int page_size = 5;
-//        int total = productService.getAllProductsDTODeletedIsFalse().size();
-//        int page_count = (int) Math.ceil(total * 1.0 / page_size);
-
-//        HashMap<Integer, List<ProductDTO>> result = new HashMap<>();
-//        for(int i = 0; i < page_count; i++){
-//            Pageable sortedByPriceDesc = PageRequest.of(i, page_size, Sort.by("price").descending());
-//            List<Product> products = productService.findAllByDeletedIsFalse(sortedByPriceDesc);
-//            List<ProductDTO> productDTOS = new ArrayList<>();
-//            for(Product p : products){
-//                ProductDTO productDTO = p.toProductDTO();
-//                productDTOS.add(productDTO);
-//            }
-//            result.put(i, productDTOS);
-//        }
-
-        Page<ProductResDTO> productResDTOS = productService.findAllPagesByDeletedIsFalse(pageable);
-
-        return new ResponseEntity<>(productResDTOS, HttpStatus.OK);
-    }
-
     @GetMapping("")
-    public ResponseEntity<?> getAllProductByKeySearchPagingAndSorting(@RequestParam("q") String keySearch, @PageableDefault(sort = "price", direction = Sort.Direction.ASC, size = 5) Pageable pageable) {
+    public ResponseEntity<?> getAllProductByKeySearchPagingAndSorting(@RequestParam("q") String keySearch, @PageableDefault(sort = "id", direction = Sort.Direction.ASC, size = 5) Pageable pageable) {
 
-//        pageable = PageRequest.of(currentPage, 5);
+//      pageable = PageRequest.of(currentPage, 5);
 
         keySearch = '%' + keySearch + '%';
 
@@ -191,24 +151,6 @@ public class ProductAPI {
 
     @PostMapping("/search/q={key}")
     public ResponseEntity<?> searchByProductName(@PathVariable("key") String key) {
-//        List<ProductDTO> productDTOS = new ArrayList<>();
-//        List<ProductResDTO> productResDTOS = productService.getProductByDeletedIsFalseAndNameLike(key);
-//
-//        for (ProductResDTO item : productResDTOS) {
-//            ProductAvatarDTO productAvatarDTO = new ProductAvatarDTO();
-//            productAvatarDTO.setId(item.getAvatarId());
-//            productAvatarDTO.setFileName(item.getFileName());
-//            productAvatarDTO.setFileFolder(item.getFileFolder());
-//            productAvatarDTO.setCloudId(item.getFileUrl());
-//            ProductDTO productDTO = item.toProductDTO(productAvatarDTO);
-//            productDTOS.add(productDTO);
-//        }
-//        return new ResponseEntity<>(productDTOS, HttpStatus.OK);
-
-//        if(key == null || key.equals("")){
-//            List<ProductDTO> productDTOS = productService.getAllProductsDTODeletedIsFalse();
-//            return new ResponseEntity<>(productDTOS, HttpStatus.OK);
-//        }
         key = "%" + key + "%";
         List<Product> products = productService.getProductByDeletedIsFalseAndProductNameLike(key);
         List<ProductDTO> productDTOS = new ArrayList<>();

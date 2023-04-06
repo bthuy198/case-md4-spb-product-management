@@ -71,28 +71,17 @@
                     </div>
                 </div>
                 <div class="p-2">
-                    <div style="padding-bottom: 20px; padding-right: 15px">
-                        <div class="dropdown" style="display: flex; justify-content: end">
-                            <button class="btn dropdown-toggle" type="button" id="btnDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Sort By
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="btnDropdown">
-                                <li id="asc"><a class="dropdown-item" href="#">Price (low to high)</a></li>
-                                <li id="desc"><a class="dropdown-item" href="#">Price (high to low)</a></li>
-                            </ul>
-                        </div>
-                    </div>
                     <table class="table rounded table-striped rounded" id="table-list">
                         <thead>
                         <tr>
                             <th>#</th>
                             <th>Image</th>
-                            <th>Product Name</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
+                            <th id="productName">Product Name</th>
+                            <th id="price" data-toggle="tooltip" title="Sort price high to low">Price  <i class="fa-solid fa-arrow-down-short-wide"></i></th>
+                            <th id="quantity">Quantity</th>
                             <th>Description</th>
                             <th>Category</th>
-                            <th colspan="2"><i class="fa-solid fa-gear"></i></th>
+                            <th colspan="2">Action</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -284,5 +273,4 @@
 </div>
 <th:block th:replace="product/productJs :: script"></th:block>
 </body>
-
 </html>
